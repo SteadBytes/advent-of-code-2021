@@ -1,11 +1,10 @@
 import aoc
 
-func countIncreases(depths: seq[int]): int = 
-  var prev = 0
-  for (i, x) in depths.pairs:
-    if i != 0 and x > prev:
+func countIncreases(depths: seq[int], n: int): int = 
+  for i in n..<depths.len:
+    if depths[i] > depths[i-n]:
       inc result
-    prev = x
 
 let depths = readIntLines("inputs/d01.txt")
-echo countIncreases(depths)
+echo "part 1: ", countIncreases(depths, 1)
+echo "part 2: ", countIncreases(depths, 3)
