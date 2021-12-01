@@ -1,9 +1,8 @@
 import aoc
+import sequtils, sugar
 
-func countIncreases(depths: seq[int], n: int): int = 
-  for i in n..<depths.len:
-    if depths[i] > depths[i-n]:
-      inc result
+func countIncreases(depths: seq[int], n: int): int =
+  zip(depths, depths[n..^1]).filter(x => x[1] > x[0]).len
 
 const depths = readInputInts("../inputs/d01.txt")
 
