@@ -1,0 +1,6 @@
+# ignore files wo extension (posix binaries)
+*
+!*.*
+!*/
+
+nimcache/
