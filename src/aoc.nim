@@ -1,5 +1,6 @@
-import strutils, sequtils, sugar
+import strutils, sequtils
 
-proc readIntLines*(path: string): seq[int] = 
-  for l in path.lines:
-    result.add(parseInt(l))
+proc readInputInts*(path: string): seq[int] {.compiletime.} =
+  ## Compile-time parse an integer per line from puzzle input at `path`.
+  return staticRead(path).strip().splitLines().map(parseInt)
+
