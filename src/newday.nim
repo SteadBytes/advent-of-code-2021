@@ -40,7 +40,7 @@ proc main() =
     if fileExists modulePath:
       echo &"Skipping existing module: {modulePath}"
     else:
-      modulePath.writeFile(&"const input = staticRead(\"../{inputPath}\")\n\n#echo \"part 1: \"\n#echo \"part 2: \"")
+      modulePath.writeFile(&"import strutils\n\nconst input = staticRead(\"../{inputPath}\")\n\n#echo \"part 1: \"\n#echo \"part 2: \"")
 
     if fileExists(inputPath):
       echo &"Skipping existing input: {inputPath}"
