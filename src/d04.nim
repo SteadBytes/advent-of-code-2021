@@ -23,6 +23,13 @@ proc get[A, B](t: Table[A, B]; key: A): Option[B] =
   else:
     none(B)
 
+# TODO: Remove most of the `Option`s throughout this solution. These are mostly
+# present to account for numbers on boards that aren't in the list of numbers.
+# However, it *seems* (at least for my inputs) that all the numbers on the
+# boards are present in the list of numbers (e.g. by the end of the list, all
+# boards will be completely marked). Removing the `Option` handling will make
+# much of this solution clearer and more concise.
+
 proc winningTurn(turnsMap: Table[int, int]; board: seq[seq[int]]): Option[int] =
   let turns = board.map(l => l.filterMap(x => turnsMap.get(x)))
   let rows = turns.filter(r => r.len == 5)
@@ -37,33 +44,61 @@ proc winningTurn(turnsMap: Table[int, int]; board: seq[seq[int]]): Option[int] =
     of (None(), Some(@b)): some(b)
     else: none(int)
 
+proc score(
+  board: seq[seq[int]];
+  numbers: seq[int];
+  turnsMap: Table[int, int];
+  finalTurn: int;
+): int =
+  let finalNumber = numbers[finalTurn]
+  let unmarkedSum =
+    board
+      .map(l => l.map(x => (
+        if turnsMap.getOrDefault(x, high int) <= finalTurn:
+        0
+      else:
+        x
+      )).foldl(a + b))
+      .foldl(a + b)
+  unmarkedSum * finalNumber
 
-const input = staticRead("../inputs/d04.txt")
+proc main() =
+  const input = staticRead("../inputs/d04.txt")
 
-let sections = input.split("\n\n")
-let numbers = sections[0].split(",").map(parseInt)
-# I _wish_ iterators were more composable e.g. numbers.pairs.map(x => (x[1], x[0]))
-let turnsMap = collect:
-  for i, x in numbers: {x: i}
-# TODO: Use arrays here as we know each board is 5x5?
-let boards = sections[1..^1].map(s => s.strip().splitLines().map(l =>
-    l.splitWhitespace().map(parseInt)))
-let winTurns = boards.map(b => winningTurn(turnsMap, b))
-let winIdx = winTurns.map(x => x.get(high int)).minIndex()
-# Sanity check 
-assert winTurns[winIdx].isSome
-let finalTurn = winTurns[winIdx].get()
-let finalNumber = numbers[finalTurn]
-let unmarkedSum =
-  boards[winIdx]
-    .map(l => l.map(x => (
-      if turnsMap.getOrDefault(x, high int) <= finalTurn:
-      0
-    else:
-      x
-    )).foldl(a + b))
-    .foldl(a + b)
-let score = unmarkedSum * finalNumber
+  let sections = input.split("\n\n")
+  let numbers = sections[0].split(",").map(parseInt)
+  # I _wish_ iterators were more composable e.g. numbers.pairs.map(x => (x[1], x[0]))
+  let turnsMap = collect:
+    for i, x in numbers: {x: i}
+  # TODO: Use arrays here as we know each board is 5x5?
+  let boards = sections[1..^1].map(
+      s => s.strip().splitLines().map(l => l.splitWhitespace().map(parseInt))
+  )
+  assert boards.all(b => b.all(r => r.map(x => turnsMap.hasKey(x)).all(x => x == true)))
 
-echo "part 1: ", score
-#echo "part 2: "
+  let winTurns = boards.map(b => winningTurn(turnsMap, b))
+  let firstWin = winTurns.map(x => x.get(high int)).minIndex()
+  let lastWin = winTurns.map(x => x.get(low int)).maxIndex()
+
+  # Sanity check
+  assert winTurns[firstWin].isSome
+  assert winTurns[lastWin].isSome
+
+  let firstScore = score(
+    boards[firstWin],
+    numbers,
+    turnsMap,
+    winTurns[firstWin].get()
+  )
+  let lastScore = score(
+    boards[lastWin],
+    numbers,
+    turnsMap,
+    winTurns[lastWin].get()
+  )
+  echo "part 1: ", firstScore
+  echo "part 2: ", lastScore
+
+when isMainModule:
+  main()
+
