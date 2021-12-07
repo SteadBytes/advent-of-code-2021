@@ -1,4 +1,4 @@
-import os, strformat, parseopt, sugar, strutils, httpclient, net
+import os, strformat, parseopt, strutils, httpclient, net
 
 const usage = """
 USAGE:
@@ -10,6 +10,21 @@ FLAGS:
 ARGS:
     DAY    day number
 """
+
+proc moduleSkeleton(inputPath: string): string =
+  &"""
+import strutils, sequtils, sugar
+
+proc main() =
+  const input = staticRead("../{inputPath}")
+
+  #echo "part 1: "
+  #echo "part 2: "   
+
+when isMainModule:
+  main()
+  """
+
 
 proc main() =
   var days: seq[int]
@@ -40,7 +55,7 @@ proc main() =
     if fileExists modulePath:
       echo &"Skipping existing module: {modulePath}"
     else:
-      modulePath.writeFile(&"import strutils\n\nconst input = staticRead(\"../{inputPath}\")\n\n#echo \"part 1: \"\n#echo \"part 2: \"")
+      modulePath.writeFile(moduleSkeleton(inputPath))
 
     if fileExists(inputPath):
       echo &"Skipping existing input: {inputPath}"
