@@ -13,6 +13,7 @@ ARGS:
 
 proc moduleSkeleton(inputPath: string): string =
   &"""
+import aoc
 import strutils, sequtils, sugar
 
 proc main() =
