@@ -18,36 +18,60 @@ template y*(c: Coord): int = c[1]
 
 template `+`*(a, b: Coord): Coord = (a.x + b.x, a.y + b.y)
 
-template `[]`*[T](data: Grid[T], index: Coord): T =
-  data[index.y][index.x]
+template `[]`*[T](g: Grid[T], index: Coord): T =
+  g[index.y][index.x]
 
-## Walk `g` from top left to bottom right, yielding coordinates and corresponding values.
+proc `[]=`*[T](g: var Grid[T], index: Coord, val: T) =
+  g[index.y][index.x] = val
+
 iterator traverse*[T](g: Grid[T]): Coord =
+  ## Walk `g` from top left to bottom right, yielding coordinates and corresponding values.
   for y, row in g:
     for x, _ in row:
       yield (x, y)
 
-## North, East, South, West (assuming top left origin).
-const directions* = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+## Cardinal directions (N, E, S, W), assuming top left origin.
+const directions4* = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+## Cardinal and intercardinal directions (N, NE, E, SE, S, SW, W, NW), assuming top left origin.
+const directions8* = [
+  (0, -1),
+  (1, -1),
+  (1, 0),
+  (1, 1),
+  (0, 1),
+  (-1, 1),
+  (-1, 0),
+  (-1, -1),
+]
 
-## Yields coordinates adjacent to `c` (North, East, South, West).
-iterator neighbours*(c: Coord): Coord =
+iterator neighbours*(c: Coord, directions: openArray[
+  ## Yields coordinates adjacent to `c`.
+    Coord] = directions4): Coord =
   for d in directions:
     yield d + c
 
-## Yields coordinates adjacent to `c` within the bounds of `g`.
-iterator neighbours*(g: Grid, c: Coord): Coord =
+iterator neighbours*(g: Grid, c: Coord, directions: openArray[
+  ## Yields coordinates adjacent to `c` within the bounds of `g`.
+    Coord] = directions4): Coord =
   let yLim = g.len
   let xLim = g[0].len
-  for (x, y) in neighbours(c):
+  for (x, y) in neighbours(c, directions):
     if 0 <= x and x < xLim and 0 <= y and y < yLim:
       yield (x, y)
 
-func parseGrid*(s: string): Grid[int] =
-  result = s.strip().splitLines().map(l => l.map(x => int(x) - int('0')))
+func parseDigit*(c: char): int =
+  result = int(c) - int('0')
+  if not result in 0..9:
+    raise newException(ValueError, "invalid digit: " & c)
+
+func parseGrid*[T](s: string; f: proc (x: char): T): Grid[T] =
+  result = s.strip().splitLines().map(l => l.map(f))
   # Sanity check consistent width
   let l = result[0].len
   assert result.allIt(it.len == l)
+
+func parseGrid*(s: string): Grid[int] =
+  parseGrid(s, parseDigit)
 
 # `Option` utilities
 
