@@ -1,5 +1,5 @@
 import aoc
-import strutils, sequtils, sugar
+import strutils, sequtils, sugar, deques, sets, algorithm
 
 # TODO: Move into aoc module (grids/coords are common in AoC)
 
@@ -49,14 +49,42 @@ func parseGrid(s: string): Grid[int] =
 
 proc main() =
   const input = staticRead("../inputs/d09.txt")
+# const input = staticRead("../inputs/d09.example.txt")
   let grid = parseGrid(input)
-  let riskLevels = collect:
+  let lowPointRiskLevels = collect:
     for c, v in grid.traverse():
       # I wish Nim iterators supported sequtils map/filter/all etc
       if grid.neighbours(c).toSeq().all(c => grid[c] > v):
         v + 1
-  echo "part 1: ", riskLevels.foldl(a + b)
-  #echo "part 2: "
+  echo "part 1: ", lowPointRiskLevels.foldl(a + b)
+
+  # A basin consists of all locations contained within a border of risk level 9
+  # locations or the edge of the grid, with a low point in the centre.
+  # Search outwards from each low point until a 9 or edge is reached.
+
+  # TODO: part 1 duplication
+  let lowPoints = collect:
+    for c, v in grid.traverse():
+      # I wish Nim iterators supported sequtils map/filter/all etc
+      if grid.neighbours(c).toSeq().all(c => grid[c] > v):
+        c
+  var basinSizes = newSeq[int](lowPoints.len)
+  for lp in lowPoints:
+    # Include starting low point in size
+    var size = 1
+    var q = [lp].toDeque()
+    var visited = toHashSet([lp])
+    while q.len > 0:
+      let c = q.popFirst()
+      for c2 in grid.neighbours(c):
+        if not (c2 in visited or grid[c2] == 9):
+          inc size
+          visited.incl(c2)
+          q.addLast(c2)
+    basinSizes.add(size)
+
+  basinSizes.sort(order = SortOrder.Descending)
+  echo "part 2: ", basinSizes[0..<3].foldl(a * b)
 
 when isMainModule:
   main()
