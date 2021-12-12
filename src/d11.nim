@@ -28,11 +28,19 @@ proc part1(g: Grid): int =
   for _ in 0..<100:
     result += step(g)
 
+proc part2(g: Grid): int =
+  var g = g
+  var octoCount = g.traverse().toSeq().len
+  while true:
+    inc result
+    if step(g) == octoCount:
+      break
+
 proc main() =
   const input = staticRead("../inputs/d11.txt")
   var grid = parseGrid(input, x => int8(parseDigit(x)))
   echo "part 1: ", part1(grid)
-  #echo "part 2: "
+  echo "part 2: ", part2(grid)
 
 when isMainModule:
   main()
