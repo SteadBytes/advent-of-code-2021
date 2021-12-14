@@ -24,15 +24,29 @@ func parseInput(s: string): (HashSet[Coord], seq[Coord]) =
   let instructions = sections[1].splitLines().map(parseInstruction)
   (dots, instructions)
 
+func doFold(dots: HashSet[Coord], fold: Coord): HashSet[Coord] =
+  collect:
+    for c in dots:
+      {abs(fold - abs(fold-c))}
+
 proc main() =
   const input = staticRead("../inputs/d13.txt")
   let (dots, instructions) = parseInput(input)
-  let fold = instructions[0]
-  let foldedDots = collect:
-    for c in dots:
-      {abs(fold - abs(fold-c))}
-  echo "part 1: ", foldedDots.len
-  #echo "part 2: "
+  echo "part 1: ", doFold(dots, instructions[0]).len
+
+  # TODO: This is not the most elegant code I've ever written but it works...
+  let finalDots = instructions.foldl(doFold(a, b), dots).toSeq()
+  let xRange = finalDots.map(c => c.x).min..finalDots.map(c => c.x).max
+  let yRange = finalDots.map(c => c.x).min..finalDots.map(c => c.y).max
+  var s = ""
+  for y in yRange:
+    s &= '\n'
+    for x in xRange:
+      if (x, y) in finalDots:
+        s &= "#"
+      else:
+        s &= " "
+  echo "part 2: ", s
 
 when isMainModule:
   main()
