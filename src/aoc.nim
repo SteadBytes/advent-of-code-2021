@@ -17,6 +17,10 @@ template x*(c: Coord): int = c[0]
 template y*(c: Coord): int = c[1]
 
 template `+`*(a, b: Coord): Coord = (a.x + b.x, a.y + b.y)
+template `-`*(a, b: Coord): Coord = (a.x - b.x, a.y - b.y)
+
+func abs*(c: Coord): Coord =
+  (abs(c.x), abs(c.y))
 
 template `[]`*[T](g: Grid[T], index: Coord): T =
   g[index.y][index.x]
