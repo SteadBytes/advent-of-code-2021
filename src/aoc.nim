@@ -28,6 +28,9 @@ template `[]`*[T](g: Grid[T], index: Coord): T =
 proc `[]=`*[T](g: var Grid[T], index: Coord, val: T) =
   g[index.y][index.x] = val
 
+func width*(g: Grid): int = g.len
+func height*(g: Grid): int = g[0].len
+
 iterator traverse*[T](g: Grid[T]): Coord =
   ## Walk `g` from top left to bottom right, yielding coordinates and corresponding values.
   for y, row in g:
@@ -48,17 +51,22 @@ const directions8* = [
   (-1, -1),
 ]
 
-iterator neighbours*(c: Coord, directions: openArray[
+iterator neighbours*(
+  c: Coord,
+  directions: openArray[Coord] = directions4
+): Coord =
   ## Yields coordinates adjacent to `c`.
-    Coord] = directions4): Coord =
   for d in directions:
     yield d + c
 
-iterator neighbours*(g: Grid, c: Coord, directions: openArray[
+iterator neighbours*(
+  g: Grid,
+  c: Coord,
+  directions: openArray[Coord] = directions4
+): Coord =
   ## Yields coordinates adjacent to `c` within the bounds of `g`.
-    Coord] = directions4): Coord =
-  let yLim = g.len
-  let xLim = g[0].len
+  let yLim = g.height
+  let xLim = g.width
   for (x, y) in neighbours(c, directions):
     if 0 <= x and x < xLim and 0 <= y and y < yLim:
       yield (x, y)
@@ -87,6 +95,10 @@ proc get*[A, B](t: Table[A, B]; key: A): Option[B] =
     some(t[key])
   else:
     none(B)
+
+# Numerical
+func divmod*(a, b: int): (int, int) =
+  (a div b, a mod b)
 
 # Misc
 
