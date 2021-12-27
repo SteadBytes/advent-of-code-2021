@@ -103,16 +103,16 @@ const orientations = [
   (a: Coord3D) => [-a[1], -a[0], -a[2]],
 ]
 
-proc findAlignment(reference, scanner: Neighbours): (Coord3D -> Coord3D) =
+func findAlignment(reference, scanner: Neighbours): (Coord3D, (Coord3D -> Coord3D)) =
   for o in orientations:
-    var offsets: HashSet[Coord3D]
+    var positions: HashSet[Coord3D]
     for b1, b2 in fields(reference, scanner):
-      offsets.incl(b1 - o(b2))
-    if offsets.len == 1:
-      let offset = offsets.pop()
-      return (a: Coord3D) => o(a) + offset
+      positions.incl(b1 - o(b2))
+    if positions.len == 1:
+      let pos = positions.pop()
+      return (pos, (a: Coord3D) => o(a) + pos)
 
-proc part1(report: Report): int =
+proc solve(report: Report): (int, int) =
   ## The manhattan distance between a pair of beacons is consistent between
   ## rotations.
   ##
@@ -130,6 +130,7 @@ proc part1(report: Report): int =
   ##
   ## The total number of beacons is the size of the set of aligned beacons.
   var aligned = report[0].toHashSet()
+  var scannerPositions: seq[Coord3D]
   var scannerMaps = collect:
     for scanner, beacons in report:
       {scanner: mapNeighbours(beacons)}
@@ -139,20 +140,23 @@ proc part1(report: Report): int =
     let (scanner, fieldNeighbours, scannerNeighbours) = findMatch(
         alignedNeighbours, scannerMaps)
     scannerMaps.del(scanner)
-    let align = findAlignment(fieldNeighbours, scannerNeighbours)
+    let (pos, align) = findAlignment(fieldNeighbours, scannerNeighbours)
+    scannerPositions.add(pos)
     for c in report[scanner].mapIt(align(it)):
       aligned.incl(c)
 
-  aligned.len
-
-func part2(report: Report): int =
-  discard
+  let scannerDistances = collect:
+    for p1 in scannerPositions:
+      for p2 in scannerPositions:
+        manhattan(p1, p2)
+  (aligned.len, scannerDistances.max())
 
 proc main() =
   const input = staticRead("../inputs/d19.txt")
   let report = parseInput(input)
-  echo "part 1: ", part1(report)
-  echo "part 2: ", part2(report)
+  let (numBeacons, maxScannerDist) = solve(report)
+  echo "part 1: ", numBeacons
+  echo "part 2: ", maxScannerDist
 
 when isMainModule:
   when defined(testing):
@@ -177,10 +181,10 @@ when isMainModule:
 
     const exampleReport = staticRead("../inputs/d19.example.txt").parseInput()
     test "part 1":
-      check part1(exampleReport) == 79
+      check solve(exampleReport)[0] == 79
 
     test "part 2":
-      check part2(exampleReport) == 3621
+      check solve(exampleReport)[1] == 3621
 
   else:
     main()
