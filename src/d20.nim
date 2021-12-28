@@ -40,10 +40,10 @@ func enhance(
       let c = (x, y)
       let x =
         window.map(v => c + v).map(
-          c2 => int(
-            if xMin <= c2.x and c2.x <= xMax and yMin <= c2.y and c2.y <= yMax:
+          c => int(
+            if xMin <= c.x and c.x <= xMax and yMin <= c.y and c.y <= yMax:
               # Within explored region -> use known value
-              litPixels.contains(c2)
+              litPixels.contains(c)
             else:
               # Outside explored region -> use default value for the rest of
               # the grid
@@ -54,26 +54,44 @@ func enhance(
       if algo[x]:
         result.incl(c)
 
-func part1(algo: seq[bool], inPixels: HashSet[Coord]): int =
-  ## If the pixel at index 0 of the enhancement algorithm is lit, *every* pixel
-  ## in the infinite grid will be lit by the first round of enhancement:
+func findLitPixels(algo: seq[bool], inPixels: HashSet[Coord],
+    rounds: int): int =
+  ## If the first pixel of the enhancement algorithm is list and the last pixel
+  ## is off, *every* pixel in the infinite grid will be lit by the first round
+  ## of enhancement, then unlit by the next, then lit by the next and so on: -
   ## - All of these pixels begin unlit
-  ## - The 3x3 window binary number for each such pixel will be 0
-  ## - All pixels replaced with enhancement[0] on the first application
+  ## - On the first round, the 3x3 window binary number for each such pixel
+  ##   will be 0
+  ## - All pixels replaced with enhancement[0] - switching them to lit
+  ## - On the second round, the 3x3 window binary number will be 512
+  ## - All pixels replaced with enhancement[512] - switching them off
+  ## - Repeat ad infinitum
   ##
   ## To accomodate for this, `enhance` takes a `default` parameter to indicate
   ## the value to be used for pixels outside of the "explored" portion of the
   ## infinite grid.
   ##
   ## Note: This behaviour is _not_ demonstrated in the puzzle example input.
-  let outPixels = (0..<2).foldl(enhance(a, algo, b > 0 and algo[0]), inPixels)
-  outPixels.len
+  (0..<rounds).foldl(
+    enhance(
+      a,
+      algo,
+      bool(b and 1) and algo[0]
+  ),
+    inPixels
+  ).len
+
+func part1(algo: seq[bool], inPixels: HashSet[Coord]): int =
+  findLitPixels(algo, inPixels, 2)
+
+func part2(algo: seq[bool], inPixels: HashSet[Coord]): int =
+  findLitPixels(algo, inPixels, 50)
 
 proc main() =
   const input = staticRead("../inputs/d20.txt")
   let (algo, inPixels) = parseInput(input)
   echo "part 1: ", part1(algo, inPixels)
-  #echo "part 2: "
+  echo "part 2: ", part2(algo, inPixels)
 
 when isMainModule:
   when defined(testing):
@@ -82,10 +100,10 @@ when isMainModule:
     const exampleInput = staticRead("../inputs/d20.example.txt")
     let (algo, inPixels) = parseInput(exampleInput)
     test "part 1":
-      assert part1(algo, inPixels) == 35
+      check part1(algo, inPixels) == 35
 
-    # test "part 2":
-    #   assert false
+    test "part 2":
+      check part2(algo, inPixels) == 3351
 
   else:
     main()
