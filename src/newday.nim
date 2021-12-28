@@ -23,7 +23,17 @@ proc main() =
   #echo "part 2: "   
 
 when isMainModule:
-  main()
+  when defined(testing):
+    import unittest
+
+    test "part 1":
+      assert false
+
+    test "part 2":
+      assert false
+
+  else:
+    main()
   """
 
 
